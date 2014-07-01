@@ -1,9 +1,8 @@
-define([
-  'Vector',
-  'common'
-], function(Vector, _) {
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
-  var Spring = function(a, b, k, d, l) {
+  function Spring(a, b, k, d, l) {
 
     this.constant = k;
     this.damping = d;
@@ -12,7 +11,7 @@ define([
     this.b = b;
     this.on = true;
 
-  };
+  }
 
   _.extend(Spring.prototype, {
 
@@ -82,6 +81,5 @@ define([
 
   });
 
-  return Spring;
+  module.exports = Spring;
 
-});

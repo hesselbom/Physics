@@ -1,9 +1,8 @@
-define([
-  'Vector',
-  'common'
-], function(Vector, _) {
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
-  var Attraction = function(a, b, k, d) {
+  function Attraction(a, b, k, d) {
 
     this.a = a;
     this.b = b;
@@ -12,7 +11,7 @@ define([
     this.distanceMin = d;
     this.distanceMinSquared = d * d;
 
-  };
+  }
 
   _.extend(Attraction.prototype, {
 
@@ -72,6 +71,4 @@ define([
 
   });
 
-  return Attraction;
-
-});
+  module.exports = Attraction;

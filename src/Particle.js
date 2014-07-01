@@ -1,9 +1,8 @@
-define([
-  'Vector',
-  'common'
-], function(Vector, _) {
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
-  var Particle = function(mass) {
+  function Particle(mass) {
 
     this.position = new Vector();
     this.velocity = new Vector();
@@ -13,7 +12,7 @@ define([
     this.age = 0;
     this.dead = false;
 
-  };
+  }
 
   _.extend(Particle.prototype, {
 
@@ -57,6 +56,4 @@ define([
 
   });
 
-  return Particle;
-
-})
+  module.exports = Particle;

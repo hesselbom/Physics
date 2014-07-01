@@ -1,5 +1,3 @@
-define([
-], function() {
 
   /**
    * Pulled only what's needed from:
@@ -55,7 +53,7 @@ define([
     return low;
   };
 
-  return {
+  module.exports = {
 
     has: has,
 
@@ -102,6 +100,5 @@ define([
       return obj === null;
     }
 
-  }
+  };
 
-});

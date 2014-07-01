@@ -1,11 +1,10 @@
-define([
-  'Vector',
-  'Particle',
-  'Spring',
-  'Attraction',
-  'Integrator',
-  'common'
-], function(Vector, Particle, Spring, Attraction, Integrator, _) {
+var _          = require('./common')
+,   Vector     = require('./Vector')
+,   Particle   = require('./Particle')
+,   Spring     = require('./Spring')
+,   Attraction = require('./Attraction')
+,   Integrator = require('./Integrator')
+;
 
   /**
    * traer.js
@@ -27,7 +26,7 @@ define([
    *
    * @class
    */
-  var ParticleSystem = function() {
+  function ParticleSystem() {
 
     this.__equilibriumCriteria = { particles: true, springs: true, attractions: true };
     this.__equilibrium = false; // are we at equilibrium?
@@ -56,7 +55,7 @@ define([
       this.drag = ParticleSystem.DEFAULT_DRAG;
     }
 
-  };
+  }
 
   _.extend(ParticleSystem, {
 
@@ -275,6 +274,4 @@ define([
 
   });
 
-  return ParticleSystem;
-
-});
+  module.exports = ParticleSystem;

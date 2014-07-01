@@ -6,19 +6,17 @@
  * @author jonobr1 / http://jonobr1.com/
  */
 
-define([
-  'common'
-], function(_) {
+var _ = require('./common');
 
   /**
    * A two dimensional vector.
    */
-  var Vector = function(x, y) {
+  function Vector(x, y) {
 
     this.x = x || 0;
     this.y = y || 0;
 
-  };
+  }
 
   _.extend(Vector.prototype, {
 
@@ -139,6 +137,4 @@ define([
 
   });
 
-  return Vector;
-
-});
+  module.exports = Vector;

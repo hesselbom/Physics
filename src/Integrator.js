@@ -1,7 +1,6 @@
-define([
-  'Vector',
-  'common'
-], function(Vector, _) {
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
   /**
    * Runge Kutta Integrator
@@ -9,7 +8,7 @@ define([
    * 
    * @class
    */
-  var Integrator = function(s) {
+  function Integrator(s) {
     this.s = s;
     this.originalPositions = [];
     this.originalVelocities = [];
@@ -21,7 +20,7 @@ define([
     this.k3Velocities = [];
     this.k4Forces = [];
     this.k4Velocities = [];
-  };
+  }
 
   _.extend(Integrator.prototype, {
 
@@ -190,6 +189,4 @@ define([
 
   });
 
-  return Integrator;
-
-});
+  module.exports = Integrator;

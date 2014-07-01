@@ -1,8 +1,7 @@
-define([
-  'ParticleSystem',
-  'requestAnimationFrame',
-  'common'
-], function(ParticleSystem, raf, _) {
+var _              = require('./common')
+,   raf            = require('./requestAnimationFrame')
+,   ParticleSystem = require('./ParticleSystem')
+;
 
   var updates = [];
 
@@ -11,7 +10,7 @@ define([
    * Request Animation Frame.
    * @class
    */
-  var Physics = function() {
+  function Physics() {
 
     var _this = this;
 
@@ -25,7 +24,7 @@ define([
 
     update.call(this);
 
-  };
+  }
 
   _.extend(Physics, ParticleSystem, {
 
@@ -151,6 +150,5 @@ define([
 
   }
 
-  return Physics;
+  module.exports = Physics;
 
-});
