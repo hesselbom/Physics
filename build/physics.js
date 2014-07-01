@@ -16,369 +16,267 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
-(function() {
+  function Attraction(a, b, k, d) {
 
-var root = this, previousShortcut = root.Physics;
-
-common = (function () {
-
-  /**
-   * Pulled only what's needed from:
-   * 
-   * Underscore.js 1.3.3
-   * (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
-   * http://documentcloud.github.com/underscore
-   */
-
-  var breaker = {};
-  var ArrayProto = Array.prototype;
-  var ObjProto = Object.prototype;
-  var hasOwnProperty = ObjProto.hasOwnProperty;
-  var slice = ArrayProto.slice;
-  var nativeForEach = ArrayProto.forEach;
-  var nativeIndexOf      = ArrayProto.indexOf;
-  var toString = ObjProto.toString;
-
-  var has = function(obj, key) {
-    return hasOwnProperty.call(obj, key);
-  };
-
-  var each = function(obj, iterator, context) {
-
-    if (obj == null) return;
-        if (nativeForEach && obj.forEach === nativeForEach) {
-          obj.forEach(iterator, context);
-        } else if (obj.length === +obj.length) {
-          for (var i = 0, l = obj.length; i < l; i++) {
-            if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
-          }
-        } else {
-          for (var key in obj) {
-            if (_.has(obj, key)) {
-              if (iterator.call(context, obj[key], key, obj) === breaker) return;
-            }
-          }
-        }
-
-  };
-
-  var identity = function(value) {
-    return value;
-  };
-
-  var sortedIndex = function(array, obj, iterator) {
-    iterator || (iterator = identity);
-    var low = 0, high = array.length;
-    while (low < high) {
-      var mid = (low + high) >> 1;
-      iterator(array[mid]) < iterator(obj) ? low = mid + 1 : high = mid;
-    }
-    return low;
-  };
-
-  return {
-
-    has: has,
-
-    each: each,
-
-    extend: function(obj) {
-      each(slice.call(arguments, 1), function(source) {
-        for (var prop in source) {
-          obj[prop] = source[prop];
-        }
-      });
-      return obj;
-    },
-
-    indexOf: function(array, item, isSorted) {
-      if (array == null) return -1;
-      var i, l;
-      if (isSorted) {
-        i = sortedIndex(array, item);
-        return array[i] === item ? i : -1;
-      }
-      if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item);
-      for (i = 0, l = array.length; i < l; i++) if (i in array && array[i] === item) return i;
-      return -1;
-    },
-
-    sortedIndex: sortedIndex,
-
-    identity: identity,
-
-    isNumber: function(obj) {
-      return toString.call(obj) == '[object Number]';
-    },
-
-    isFunction: function(obj) {
-      return toString.call(obj) == '[object Function]' || typeof obj == 'function';
-    },
-
-    isUndefined: function(obj) {
-      return obj === void 0;
-    },
-
-    isNull: function(obj) {
-      return obj === null;
-    }
+    this.a = a;
+    this.b = b;
+    this.constant = k;
+    this.on = true;
+    this.distanceMin = d;
+    this.distanceMinSquared = d * d;
 
   }
 
-})();
+  _.extend(Attraction.prototype, {
 
-
-Vector = (function (_) {
-
-  /**
-   * A two dimensional vector.
-   */
-  var Vector = function(x, y) {
-
-    this.x = x || 0;
-    this.y = y || 0;
-
-  };
-
-  _.extend(Vector.prototype, {
-
-    set: function(x, y) {
-      this.x = x;
-      this.y = y;
-      return this;
-    },
-
-    copy: function(v) {
-      this.x = v.x;
-      this.y = v.y;
-      return this;
-    },
-
-    clear: function() {
-      this.x = 0;
-      this.y = 0;
-      return this;
-    },
-
-    clone: function() {
-      return new Vector(this.x, this.y);
-    },
-
-    add: function(v1, v2) {
-      this.x = v1.x + v2.x;
-      this.y = v1.y + v2.y;
-      return this;
-    },
-
-    addSelf: function(v) {
-      this.x += v.x;
-      this.y += v.y;
-      return this;
-    },
-
-    sub: function(v1, v2) {
-      this.x = v1.x - v2.x;
-      this.y = v1.y - v2.y;
-      return this;
-    },
-
-    subSelf: function(v) {
-      this.x -= v.x;
-      this.y -= v.y;
-      return this;
-    },
-
-    multiplySelf: function(v) {
-      this.x *= v.x;
-      this.y *= v.y;
-      return this;
-    },
-
-    multiplyScalar: function(s) {
-      this.x *= s;
-      this.y *= s;
-      return this;
-    },
-
-    divideScalar: function(s) {
-      if (s) {
-        this.x /= s;
-        this.y /= s;
-      } else {
-        this.set(0, 0);
-      }
-      return this;
-    },
-
-    negate: function() {
-      return this.multiplyScalar(-1);
-    },
-
-    dot: function(v) {
-      return this.x * v.x + this.y * v.y;
-    },
-
-    lengthSquared: function() {
-      return this.x * this.x + this.y * this.y;
-    },
-
-    length: function() {
-      return Math.sqrt(this.lengthSquared());
-    },
-
-    normalize: function() {
-      return this.divideScalar(this.length());
-    },
-
-    distanceTo: function(v) {
-      return Math.sqrt(this.distanceToSquared(v));
-    },
-
-    distanceToSquared: function(v) {
-      var dx = this.x - v.x, dy = this.y - v.y;
-      return dx * dx + dy * dy;
-    },
-
-    setLength: function(l) {
-      return this.normalize().multiplyScalar(l);
-    },
-
-    equals: function(v) {
-      return (this.distanceTo(v) < 0.0001 /* almost same position */);
-    },
-
-    lerp: function(v, t) {
-      var x = (v.x - this.x) * t + this.x;
-      var y = (v.y - this.y) * t + this.y;
-      return this.set(x, y);
-    },
-
-    isZero: function() {
-      return (this.length() < 0.0001 /* almost zero */ );
-    }
-
-  });
-
-  return Vector;
-
-})(common);
-
-
-root.Physics = Physics = (function (ParticleSystem, raf, _) {
-
-  var updates = [];
-
-  /**
-   * Extended singleton instance of ParticleSystem with convenience methods for
-   * Request Animation Frame.
-   * @class
-   */
-  var Physics = function() {
-
-    var _this = this;
-
-    this.playing = false;
-
-    ParticleSystem.apply(this, arguments);
-
-    this.animations = [];
-
-    this.equilibriumCallbacks = [];
-
-    update.call(this);
-
-  };
-
-  _.extend(Physics, ParticleSystem, {
-
-    superclass: ParticleSystem
-
-  });
-
-  _.extend(Physics.prototype, ParticleSystem.prototype, {
-
-    /**
-     * Play the animation loop. Doesn't affect whether in equilibrium or not.
-     */
-    play: function() {
-
-      if (this.playing) {
-        return this;
-      }
-
-      this.playing = true;
-      this.__equilibrium = false;
-      update.call(this);
-
-      return this;
-
-    },
-
-    /**
-     * Pause the animation loop. Doesn't affect whether in equilibrium or not.
-     */
-    pause: function() {
-
-      this.playing = false;
-      return this;
-
-    },
-
-    /**
-     * Toggle between playing and pausing the simulation.
-     */
-    toggle: function() {
-
-      if (this.playing) {
-        this.pause();
-      } else {
-        this.play();
-      }
-
-      return this;
-
-    },
-
-    onUpdate: function(func) {
-
-      if (_.indexOf(this.animations, func) >= 0 || !_.isFunction(func)) {
-        return this;
-      }
-
-      this.animations.push(func);
-
-      return this;
-
-    },
-
-    onEquilibrium: function(func) {
-
-      if (_.indexOf(this.equilibriumCallbacks, func) >= 0 || !_.isFunction(func)) {
-        return this;
-      }
-
-      this.equilibriumCallbacks.push(func);
-
-      return this;
-
-    },
-
-    /**
-     * Call update after values in the system have changed and this will fire
-     * it's own Request Animation Frame to update until things have settled
-     * to equilibrium — at which point the system will stop updating.
-     */
     update: function() {
 
-      if (!this.__equilibrium) {
-        return this;
+     var a = this.a, b = this.b;
+     if (!this.on || (a.fixed && b.fixed)) {
+       return;
+     }
+
+     var a2bx = a.position.x - b.position.x;
+     var a2by = a.position.y - b.position.y;
+
+     var a2b = new Vector().sub(a.position, b.position);
+
+     var a2bdistanceSquared = Math.max(a2b.lengthSquared(), this.distanceMinSquared);
+
+     var force = (this.constant * a.mass * b.mass) / a2bdistanceSquared;
+
+     var length = Math.sqrt(a2bdistanceSquared);
+
+     if (force === 0 || length === 0) {
+       a2b.clear();
+     } else {
+       a2b.divideScalar(length).multiplyScalar(force);
+     }
+
+     if (!a.fixed) {
+       a.force.subSelf(a2b);
+     }
+     if (!b.fixed) {
+       b.force.addSelf(a2b);
+     }
+
+     return this;
+
+    },
+
+    /**
+     * Returns a boolean describing whether the spring is resting or not.
+     * Convenient for knowing whether or not the spring needs another update
+     * tick.
+     *
+     * TODO: Test
+     */
+    resting: function() {
+
+      var a = this.a;
+      var b = this.b;
+      var l = this.distanceMin;
+
+      return !this.on || (a.fixed && b.fixed)
+        || (a.fixed && b.position.distanceTo(a.position) <= l && b.resting())
+        || (b.fixed && a.position.distanceTo(b.position) <= l && a.resting());
+
+    }
+
+  });
+
+  module.exports = Attraction;
+
+},{"./common":8,"./vector":12}],2:[function(require,module,exports){
+var _      = require('./common')
+,   Vector = require('./vector')
+;
+
+  /**
+   * Runge Kutta Integrator
+   * http://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
+   * 
+   * @class
+   */
+  function Integrator(s) {
+    this.s = s;
+    this.originalPositions = [];
+    this.originalVelocities = [];
+    this.k1Forces = [];
+    this.k1Velocities = [];
+    this.k2Forces = [];
+    this.k2Velocities = [];
+    this.k3Forces = [];
+    this.k3Velocities = [];
+    this.k4Forces = [];
+    this.k4Velocities = [];
+  }
+
+  _.extend(Integrator.prototype, {
+
+    allocateParticles: function() {
+
+      while (this.s.particles.length > this.originalPositions.length) {
+        this.originalPositions.push(new Vector());
+        this.originalVelocities.push(new Vector());
+        this.k1Forces.push(new Vector());
+        this.k1Velocities.push(new Vector());
+        this.k2Forces.push(new Vector());
+        this.k2Velocities.push(new Vector());
+        this.k3Forces.push(new Vector());
+        this.k3Velocities.push(new Vector());
+        this.k4Forces.push(new Vector());
+        this.k4Velocities.push(new Vector());
       }
 
-      this.__equilibrium = false;
-      if (this.playing) {
-        update.call(this);
-      }
+      return this;
+
+    },
+
+    step: function(dt) {
+
+      var s = this.s;
+      var p, x, y;
+
+      this.allocateParticles();
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+          this.originalPositions[i].copy(p.position);
+          this.originalVelocities[i].copy(p.velocity);
+        }
+        p.force.clear();
+      }, this);
+
+      // K1
+
+      s.applyForces();
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+          this.k1Forces[i].copy(p.force);
+          this.k1Velocities[i].copy(p.velocity);
+        }
+        p.force.clear();
+      }, this);
+
+      // K2
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+
+          var op = this.originalPositions[i];
+          var k1v = this.k1Velocities[i];
+          x = op.x + k1v.x * 0.5 * dt;
+          y = op.y + k1v.y * 0.5 * dt;
+          p.position.set(x, y);
+
+          var ov = this.originalVelocities[i];
+          var k1f = this.k1Forces[i];
+          x = ov.x + k1f.x * 0.5 * dt / p.mass;
+          y = ov.y + k1f.y * 0.5 * dt / p.mass;
+          p.velocity.set(x, y);
+
+        }
+      }, this);
+
+      s.applyForces();
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+          this.k2Forces[i].copy(p.force);
+          this.k2Velocities[i].copy(p.velocity);
+        }
+        p.force.clear();
+      }, this);
+
+      // K3
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+
+          var op = this.originalPositions[i];
+          var k2v = this.k2Velocities[i];
+          p.position.set(op.x + k2v.x * 0.5 * dt, op.y + k2v.y * 0.5 * dt);
+
+          var ov = this.originalVelocities[i];
+          var k2f = this.k2Forces[i];
+          p.velocity.set(ov.x + k2f.x * 0.5 * dt / p.mass, ov.y + k2f.y * 0.5 * dt / p.mass);
+        }
+      }, this);
+
+      s.applyForces();
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+          this.k3Forces[i].copy(p.force);
+          this.k3Velocities[i].copy(p.velocity);
+        }
+        p.force.clear();
+      }, this);
+
+      // K4
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+
+          var op = this.originalPositions[i];
+          var k3v = this.k3Velocities[i];
+          p.position.set(op.x + k3v.x * dt, op.y + k3v.y * dt)
+
+          var ov = this.originalVelocities[i];
+          var k3f = this.k3Forces[i];
+          p.velocity.set(ov.x + k3f.x * dt / p.mass, ov.y + k3f.y * dt / p.mass);
+        }
+      }, this);
+
+      s.applyForces();
+
+      _.each(s.particles, function(p, i) {
+        if (!p.fixed) {
+          this.k4Forces[i].copy(p.force);
+          this.k4Velocities[i].copy(p.velocity);
+        }
+      }, this);
+
+      // TOTAL
+
+      _.each(s.particles, function(p, i) {
+
+        p.age += dt;
+
+        if (!p.fixed) {
+
+          var op = this.originalPositions[i];
+          var k1v = this.k1Velocities[i];
+          var k2v = this.k2Velocities[i];
+          var k3v = this.k3Velocities[i];
+          var k4v = this.k4Velocities[i];
+
+          var x = op.x + dt / 6.0 * (k1v.x + 2.0 * k2v.x + 2.0 * k3v.x + k4v.x);
+          var y = op.y + dt / 6.0 * (k1v.y + 2.0 * k2v.y + 2.0 * k3v.y + k4v.y);
+
+          p.position.set(x, y);
+
+          var ov = this.originalVelocities[i];
+          var k1f = this.k1Forces[i];
+          var k2f = this.k2Forces[i];
+          var k3f = this.k3Forces[i];
+          var k4f = this.k4Forces[i];
+
+          x = ov.x + dt / (6.0 * p.mass) * (k1f.x + 2.0 * k2f.x + 2.0 * k3f.x + k4f.x);
+          y = ov.y + dt / (6.0 * p.mass) * (k1f.y + 2.0 * k2f.y + 2.0 * k3f.y + k4f.y);
+
+          p.velocity.set(x, y);
+
+        }
+
+      }, this);
 
       return this;
 
@@ -386,37 +284,77 @@ root.Physics = Physics = (function (ParticleSystem, raf, _) {
 
   });
 
-  function update() {
+  module.exports = Integrator;
 
-    var _this = this;
+},{"./common":8,"./vector":12}],3:[function(require,module,exports){
+var _      = require('./common')
+,   Vector = require('./vector')
+;
 
-    this.tick();
+  function Particle(mass) {
 
-    _.each(this.animations, function(a) {
-      a();
-    });
-
-    if ((this.__optimized && !this.__equilibrium || !this.__optimized) && this.playing) {
-
-      raf(function() {
-        update.call(_this);
-      });
-
-    }
-
-    if (this.__optimized && this.__equilibrium){
-
-      _.each(this.equilibriumCallbacks, function(a) {
-        a();
-      });
-
-    }
+    this.position = new Vector();
+    this.velocity = new Vector();
+    this.force = new Vector();
+    this.mass = mass;
+    this.fixed = false;
+    this.age = 0;
+    this.dead = false;
 
   }
 
-  return Physics;
+  _.extend(Particle.prototype, {
 
-})(ParticleSystem = (function (Vector, Particle, Spring, Attraction, Integrator, _) {
+    /**
+     * Get the distance between two particles.
+     */
+    distanceTo: function(p) {
+      return this.position.distanceTo(p.position);
+    },
+
+    /**
+     * Make the particle fixed in 2D space.
+     */
+    makeFixed: function() {
+      this.fixed = true;
+      this.velocity.clear();
+      return this;
+    },
+
+    /**
+     * Reset a particle.
+     */
+    reset: function() {
+
+      this.age = 0;
+      this.dead = false;
+      this.position.clear();
+      this.velocity.clear();
+      this.force.clear();
+      this.mass = 1.0;
+
+      return this;
+    },
+
+    /**
+     * Returns a boolean describing whether the particle is in movement.
+     */
+    resting: function() {
+      return this.fixed || this.velocity.isZero() && this.force.isZero();
+    }
+
+  });
+
+  module.exports = Particle;
+
+},{"./common":8,"./vector":12}],4:[function(require,module,exports){
+var _          = require('./common')
+,   Vector     = require('./Vector')
+,   Particle   = require('./Particle')
+,   Spring     = require('./Spring')
+,   Attraction = require('./Attraction')
+,   Integrator = require('./Integrator')
+;
 
   /**
    * traer.js
@@ -428,6 +366,7 @@ root.Physics = Physics = (function (ParticleSystem, raf, _) {
    * @author Jeffrey Traer Bernstein <jeff TA traer TOD cc> (original Java library)
    * @author Adam Saponara <saponara TA gmail TOD com> (JavaScript port)
    * @author Jono Brandel <http://jonobr1.com/> (requirified/optimization port)
+   * @author David Schoonover <http://less.ly> (Node/CommonJS/Browserify port)
    * 
    * @version 0.3
    * @date March 25, 2012
@@ -438,7 +377,7 @@ root.Physics = Physics = (function (ParticleSystem, raf, _) {
    *
    * @class
    */
-  var ParticleSystem = function() {
+  function ParticleSystem() {
 
     this.__equilibriumCriteria = { particles: true, springs: true, attractions: true };
     this.__equilibrium = false; // are we at equilibrium?
@@ -467,7 +406,7 @@ root.Physics = Physics = (function (ParticleSystem, raf, _) {
       this.drag = ParticleSystem.DEFAULT_DRAG;
     }
 
-  };
+  }
 
   _.extend(ParticleSystem, {
 
@@ -686,72 +625,170 @@ root.Physics = Physics = (function (ParticleSystem, raf, _) {
 
   });
 
-  return ParticleSystem;
+  module.exports = ParticleSystem;
 
-})(Vector,
-Particle = (function (Vector, _) {
+},{"./Attraction":1,"./Integrator":2,"./Particle":3,"./Spring":6,"./Vector":7,"./common":8}],5:[function(require,module,exports){
+var _              = require('./common')
+,   raf            = require('./requestAnimationFrame')
+,   ParticleSystem = require('./ParticleSystem')
+;
 
-  var Particle = function(mass) {
+  var updates = [];
 
-    this.position = new Vector();
-    this.velocity = new Vector();
-    this.force = new Vector();
-    this.mass = mass;
-    this.fixed = false;
-    this.age = 0;
-    this.dead = false;
+  /**
+   * Extended singleton instance of ParticleSystem with convenience methods for
+   * Request Animation Frame.
+   * @class
+   */
+  function Physics() {
 
-  };
+    var _this = this;
 
-  _.extend(Particle.prototype, {
+    this.playing = false;
+
+    ParticleSystem.apply(this, arguments);
+
+    this.animations = [];
+
+    this.equilibriumCallbacks = [];
+
+    update.call(this);
+
+  }
+
+  _.extend(Physics, ParticleSystem, {
+
+    superclass: ParticleSystem
+
+  });
+
+  _.extend(Physics.prototype, ParticleSystem.prototype, {
 
     /**
-     * Get the distance between two particles.
+     * Play the animation loop. Doesn't affect whether in equilibrium or not.
      */
-    distanceTo: function(p) {
-      return this.position.distanceTo(p.position);
-    },
+    play: function() {
 
-    /**
-     * Make the particle fixed in 2D space.
-     */
-    makeFixed: function() {
-      this.fixed = true;
-      this.velocity.clear();
+      if (this.playing) {
+        return this;
+      }
+
+      this.playing = true;
+      this.__equilibrium = false;
+      update.call(this);
+
       return this;
+
     },
 
     /**
-     * Reset a particle.
+     * Pause the animation loop. Doesn't affect whether in equilibrium or not.
      */
-    reset: function() {
+    pause: function() {
 
-      this.age = 0;
-      this.dead = false;
-      this.position.clear();
-      this.velocity.clear();
-      this.force.clear();
-      this.mass = 1.0;
+      this.playing = false;
+      return this;
+
+    },
+
+    /**
+     * Toggle between playing and pausing the simulation.
+     */
+    toggle: function() {
+
+      if (this.playing) {
+        this.pause();
+      } else {
+        this.play();
+      }
 
       return this;
+
+    },
+
+    onUpdate: function(func) {
+
+      if (_.indexOf(this.animations, func) >= 0 || !_.isFunction(func)) {
+        return this;
+      }
+
+      this.animations.push(func);
+
+      return this;
+
+    },
+
+    onEquilibrium: function(func) {
+
+      if (_.indexOf(this.equilibriumCallbacks, func) >= 0 || !_.isFunction(func)) {
+        return this;
+      }
+
+      this.equilibriumCallbacks.push(func);
+
+      return this;
+
     },
 
     /**
-     * Returns a boolean describing whether the particle is in movement.
+     * Call update after values in the system have changed and this will fire
+     * it's own Request Animation Frame to update until things have settled
+     * to equilibrium — at which point the system will stop updating.
      */
-    resting: function() {
-      return this.fixed || this.velocity.isZero() && this.force.isZero();
+    update: function() {
+
+      if (!this.__equilibrium) {
+        return this;
+      }
+
+      this.__equilibrium = false;
+      if (this.playing) {
+        update.call(this);
+      }
+
+      return this;
+
     }
 
   });
 
-  return Particle;
+  function update() {
 
-})(Vector,
-common),
-Spring = (function (Vector, _) {
+    var _this = this;
 
-  var Spring = function(a, b, k, d, l) {
+    this.tick();
+
+    _.each(this.animations, function(a) {
+      a();
+    });
+
+    if ((this.__optimized && !this.__equilibrium || !this.__optimized) && this.playing) {
+
+      raf(function() {
+        update.call(_this);
+      });
+
+    }
+
+    if (this.__optimized && this.__equilibrium){
+
+      _.each(this.equilibriumCallbacks, function(a) {
+        a();
+      });
+
+    }
+
+  }
+
+  module.exports = Physics;
+
+
+},{"./ParticleSystem":4,"./common":8,"./requestAnimationFrame":11}],6:[function(require,module,exports){
+var _      = require('./common')
+,   Vector = require('./vector')
+;
+
+  function Spring(a, b, k, d, l) {
 
     this.constant = k;
     this.damping = d;
@@ -760,7 +797,7 @@ Spring = (function (Vector, _) {
     this.b = b;
     this.on = true;
 
-  };
+  }
 
   _.extend(Spring.prototype, {
 
@@ -830,287 +867,273 @@ Spring = (function (Vector, _) {
 
   });
 
-  return Spring;
+  module.exports = Spring;
 
-})(Vector,
-common),
-Attraction = (function (Vector, _) {
 
-  var Attraction = function(a, b, k, d) {
+},{"./common":8,"./vector":12}],7:[function(require,module,exports){
+/**
+ * @author mr.doob / http://mrdoob.com/
+ * @author philogb / http://blog.thejit.org/
+ * @author egraether / http://egraether.com/
+ * @author zz85 / http://www.lab4games.net/zz85/blog
+ * @author jonobr1 / http://jonobr1.com/
+ */
 
-    this.a = a;
-    this.b = b;
-    this.constant = k;
-    this.on = true;
-    this.distanceMin = d;
-    this.distanceMinSquared = d * d;
-
-  };
-
-  _.extend(Attraction.prototype, {
-
-    update: function() {
-
-     var a = this.a, b = this.b;
-     if (!this.on || (a.fixed && b.fixed)) {
-       return;
-     }
-
-     var a2bx = a.position.x - b.position.x;
-     var a2by = a.position.y - b.position.y;
-
-     var a2b = new Vector().sub(a.position, b.position);
-
-     var a2bdistanceSquared = Math.max(a2b.lengthSquared(), this.distanceMinSquared);
-
-     var force = (this.constant * a.mass * b.mass) / a2bdistanceSquared;
-
-     var length = Math.sqrt(a2bdistanceSquared);
-
-     if (force === 0 || length === 0) {
-       a2b.clear();
-     } else {
-       a2b.divideScalar(length).multiplyScalar(force);
-     }
-
-     if (!a.fixed) {
-       a.force.subSelf(a2b);
-     }
-     if (!b.fixed) {
-       b.force.addSelf(a2b);
-     }
-
-     return this;
-
-    },
-
-    /**
-     * Returns a boolean describing whether the spring is resting or not.
-     * Convenient for knowing whether or not the spring needs another update
-     * tick.
-     *
-     * TODO: Test
-     */
-    resting: function() {
-
-      var a = this.a;
-      var b = this.b;
-      var l = this.distanceMin;
-
-      return !this.on || (a.fixed && b.fixed)
-        || (a.fixed && b.position.distanceTo(a.position) <= l && b.resting())
-        || (b.fixed && a.position.distanceTo(b.position) <= l && a.resting());
-
-    }
-
-  });
-
-  return Attraction;
-
-})(Vector,
-common),
-Integrator = (function (Vector, _) {
+var _ = require('./common');
 
   /**
-   * Runge Kutta Integrator
-   * http://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
-   * 
-   * @class
+   * A two dimensional vector.
    */
-  var Integrator = function(s) {
-    this.s = s;
-    this.originalPositions = [];
-    this.originalVelocities = [];
-    this.k1Forces = [];
-    this.k1Velocities = [];
-    this.k2Forces = [];
-    this.k2Velocities = [];
-    this.k3Forces = [];
-    this.k3Velocities = [];
-    this.k4Forces = [];
-    this.k4Velocities = [];
-  };
+  function Vector(x, y) {
 
-  _.extend(Integrator.prototype, {
+    this.x = x || 0;
+    this.y = y || 0;
 
-    allocateParticles: function() {
+  }
 
-      while (this.s.particles.length > this.originalPositions.length) {
-        this.originalPositions.push(new Vector());
-        this.originalVelocities.push(new Vector());
-        this.k1Forces.push(new Vector());
-        this.k1Velocities.push(new Vector());
-        this.k2Forces.push(new Vector());
-        this.k2Velocities.push(new Vector());
-        this.k3Forces.push(new Vector());
-        this.k3Velocities.push(new Vector());
-        this.k4Forces.push(new Vector());
-        this.k4Velocities.push(new Vector());
-      }
+  _.extend(Vector.prototype, {
 
+    set: function(x, y) {
+      this.x = x;
+      this.y = y;
       return this;
-
     },
 
-    step: function(dt) {
-
-      var s = this.s;
-      var p, x, y;
-
-      this.allocateParticles();
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-          this.originalPositions[i].copy(p.position);
-          this.originalVelocities[i].copy(p.velocity);
-        }
-        p.force.clear();
-      }, this);
-
-      // K1
-
-      s.applyForces();
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-          this.k1Forces[i].copy(p.force);
-          this.k1Velocities[i].copy(p.velocity);
-        }
-        p.force.clear();
-      }, this);
-
-      // K2
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-
-          var op = this.originalPositions[i];
-          var k1v = this.k1Velocities[i];
-          x = op.x + k1v.x * 0.5 * dt;
-          y = op.y + k1v.y * 0.5 * dt;
-          p.position.set(x, y);
-
-          var ov = this.originalVelocities[i];
-          var k1f = this.k1Forces[i];
-          x = ov.x + k1f.x * 0.5 * dt / p.mass;
-          y = ov.y + k1f.y * 0.5 * dt / p.mass;
-          p.velocity.set(x, y);
-
-        }
-      }, this);
-
-      s.applyForces();
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-          this.k2Forces[i].copy(p.force);
-          this.k2Velocities[i].copy(p.velocity);
-        }
-        p.force.clear();
-      }, this);
-
-      // K3
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-
-          var op = this.originalPositions[i];
-          var k2v = this.k2Velocities[i];
-          p.position.set(op.x + k2v.x * 0.5 * dt, op.y + k2v.y * 0.5 * dt);
-
-          var ov = this.originalVelocities[i];
-          var k2f = this.k2Forces[i];
-          p.velocity.set(ov.x + k2f.x * 0.5 * dt / p.mass, ov.y + k2f.y * 0.5 * dt / p.mass);
-        }
-      }, this);
-
-      s.applyForces();
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-          this.k3Forces[i].copy(p.force);
-          this.k3Velocities[i].copy(p.velocity);
-        }
-        p.force.clear();
-      }, this);
-
-      // K4
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-
-          var op = this.originalPositions[i];
-          var k3v = this.k3Velocities[i];
-          p.position.set(op.x + k3v.x * dt, op.y + k3v.y * dt)
-
-          var ov = this.originalVelocities[i];
-          var k3f = this.k3Forces[i];
-          p.velocity.set(ov.x + k3f.x * dt / p.mass, ov.y + k3f.y * dt / p.mass);
-        }
-      }, this);
-
-      s.applyForces();
-
-      _.each(s.particles, function(p, i) {
-        if (!p.fixed) {
-          this.k4Forces[i].copy(p.force);
-          this.k4Velocities[i].copy(p.velocity);
-        }
-      }, this);
-
-      // TOTAL
-
-      _.each(s.particles, function(p, i) {
-
-        p.age += dt;
-
-        if (!p.fixed) {
-
-          var op = this.originalPositions[i];
-          var k1v = this.k1Velocities[i];
-          var k2v = this.k2Velocities[i];
-          var k3v = this.k3Velocities[i];
-          var k4v = this.k4Velocities[i];
-
-          var x = op.x + dt / 6.0 * (k1v.x + 2.0 * k2v.x + 2.0 * k3v.x + k4v.x);
-          var y = op.y + dt / 6.0 * (k1v.y + 2.0 * k2v.y + 2.0 * k3v.y + k4v.y);
-
-          p.position.set(x, y);
-
-          var ov = this.originalVelocities[i];
-          var k1f = this.k1Forces[i];
-          var k2f = this.k2Forces[i];
-          var k3f = this.k3Forces[i];
-          var k4f = this.k4Forces[i];
-
-          x = ov.x + dt / (6.0 * p.mass) * (k1f.x + 2.0 * k2f.x + 2.0 * k3f.x + k4f.x);
-          y = ov.y + dt / (6.0 * p.mass) * (k1f.y + 2.0 * k2f.y + 2.0 * k3f.y + k4f.y);
-
-          p.velocity.set(x, y);
-
-        }
-
-      }, this);
-
+    copy: function(v) {
+      this.x = v.x;
+      this.y = v.y;
       return this;
+    },
 
+    clear: function() {
+      this.x = 0;
+      this.y = 0;
+      return this;
+    },
+
+    clone: function() {
+      return new Vector(this.x, this.y);
+    },
+
+    add: function(v1, v2) {
+      this.x = v1.x + v2.x;
+      this.y = v1.y + v2.y;
+      return this;
+    },
+
+    addSelf: function(v) {
+      this.x += v.x;
+      this.y += v.y;
+      return this;
+    },
+
+    sub: function(v1, v2) {
+      this.x = v1.x - v2.x;
+      this.y = v1.y - v2.y;
+      return this;
+    },
+
+    subSelf: function(v) {
+      this.x -= v.x;
+      this.y -= v.y;
+      return this;
+    },
+
+    multiplySelf: function(v) {
+      this.x *= v.x;
+      this.y *= v.y;
+      return this;
+    },
+
+    multiplyScalar: function(s) {
+      this.x *= s;
+      this.y *= s;
+      return this;
+    },
+
+    divideScalar: function(s) {
+      if (s) {
+        this.x /= s;
+        this.y /= s;
+      } else {
+        this.set(0, 0);
+      }
+      return this;
+    },
+
+    negate: function() {
+      return this.multiplyScalar(-1);
+    },
+
+    dot: function(v) {
+      return this.x * v.x + this.y * v.y;
+    },
+
+    lengthSquared: function() {
+      return this.x * this.x + this.y * this.y;
+    },
+
+    length: function() {
+      return Math.sqrt(this.lengthSquared());
+    },
+
+    normalize: function() {
+      return this.divideScalar(this.length());
+    },
+
+    distanceTo: function(v) {
+      return Math.sqrt(this.distanceToSquared(v));
+    },
+
+    distanceToSquared: function(v) {
+      var dx = this.x - v.x, dy = this.y - v.y;
+      return dx * dx + dy * dy;
+    },
+
+    setLength: function(l) {
+      return this.normalize().multiplyScalar(l);
+    },
+
+    equals: function(v) {
+      return (this.distanceTo(v) < 0.0001 /* almost same position */);
+    },
+
+    lerp: function(v, t) {
+      var x = (v.x - this.x) * t + this.x;
+      var y = (v.y - this.y) * t + this.y;
+      return this.set(x, y);
+    },
+
+    isZero: function() {
+      return (this.length() < 0.0001 /* almost zero */ );
     }
 
   });
 
-  return Integrator;
+  module.exports = Vector;
 
-})(Vector,
-common),
-common),
-requestAnimationFrame = (function () {
+},{"./common":8}],8:[function(require,module,exports){
 
+  /**
+   * Pulled only what's needed from:
+   * 
+   * Underscore.js 1.3.3
+   * (c) 2009-2012 Jeremy Ashkenas, DocumentCloud Inc.
+   * http://documentcloud.github.com/underscore
+   */
+
+  var breaker = {};
+  var ArrayProto = Array.prototype;
+  var ObjProto = Object.prototype;
+  var hasOwnProperty = ObjProto.hasOwnProperty;
+  var slice = ArrayProto.slice;
+  var nativeForEach = ArrayProto.forEach;
+  var nativeIndexOf      = ArrayProto.indexOf;
+  var toString = ObjProto.toString;
+
+  var has = function(obj, key) {
+    return hasOwnProperty.call(obj, key);
+  };
+
+  var each = function(obj, iterator, context) {
+
+    if (obj == null) return;
+        if (nativeForEach && obj.forEach === nativeForEach) {
+          obj.forEach(iterator, context);
+        } else if (obj.length === +obj.length) {
+          for (var i = 0, l = obj.length; i < l; i++) {
+            if (i in obj && iterator.call(context, obj[i], i, obj) === breaker) return;
+          }
+        } else {
+          for (var key in obj) {
+            if (_.has(obj, key)) {
+              if (iterator.call(context, obj[key], key, obj) === breaker) return;
+            }
+          }
+        }
+
+  };
+
+  var identity = function(value) {
+    return value;
+  };
+
+  var sortedIndex = function(array, obj, iterator) {
+    iterator || (iterator = identity);
+    var low = 0, high = array.length;
+    while (low < high) {
+      var mid = (low + high) >> 1;
+      iterator(array[mid]) < iterator(obj) ? low = mid + 1 : high = mid;
+    }
+    return low;
+  };
+
+  module.exports = {
+
+    has: has,
+
+    each: each,
+
+    extend: function(obj) {
+      each(slice.call(arguments, 1), function(source) {
+        for (var prop in source) {
+          obj[prop] = source[prop];
+        }
+      });
+      return obj;
+    },
+
+    indexOf: function(array, item, isSorted) {
+      if (array == null) return -1;
+      var i, l;
+      if (isSorted) {
+        i = sortedIndex(array, item);
+        return array[i] === item ? i : -1;
+      }
+      if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item);
+      for (i = 0, l = array.length; i < l; i++) if (i in array && array[i] === item) return i;
+      return -1;
+    },
+
+    sortedIndex: sortedIndex,
+
+    identity: identity,
+
+    isNumber: function(obj) {
+      return toString.call(obj) == '[object Number]';
+    },
+
+    isFunction: function(obj) {
+      return toString.call(obj) == '[object Function]' || typeof obj == 'function';
+    },
+
+    isUndefined: function(obj) {
+      return obj === void 0;
+    },
+
+    isNull: function(obj) {
+      return obj === null;
+    }
+
+  };
+
+
+},{}],"H99CHA":[function(require,module,exports){
+var root = (function(){ return this; })()
+,   previousShortcut = root.Physics
+;
+
+module.exports = root.Physics = require('./Physics');
+
+},{"./Physics":5}],"physics":[function(require,module,exports){
+module.exports=require('H99CHA');
+},{}],11:[function(require,module,exports){
   /*
    * Requirified version of Paul Irish's request animation frame.
    * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
    */
-
-  return  window.requestAnimationFrame       ||
+module.exports = 
+          window.requestAnimationFrame       ||
           window.webkitRequestAnimationFrame ||
           window.mozRequestAnimationFrame    ||
           window.oRequestAnimationFrame      ||
@@ -1118,7 +1141,7 @@ requestAnimationFrame = (function () {
           function (callback) {
             window.setTimeout(callback, 1000 / 60);
           };
-})(),
-common);
 
-})();
+},{}],12:[function(require,module,exports){
+module.exports=require(7)
+},{"./common":8}]},{},["H99CHA"])

@@ -16,6 +16,7 @@ var _          = require('./common')
    * @author Jeffrey Traer Bernstein <jeff TA traer TOD cc> (original Java library)
    * @author Adam Saponara <saponara TA gmail TOD com> (JavaScript port)
    * @author Jono Brandel <http://jonobr1.com/> (requirified/optimization port)
+   * @author David Schoonover <http://less.ly> (Node/CommonJS/Browserify port)
    * 
    * @version 0.3
    * @date March 25, 2012

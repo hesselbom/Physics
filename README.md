@@ -14,4 +14,4 @@ This fork replaces streamlines installation and integration:
 
 ---
 
-Original code by [Jono Brandel](https://github.com/jonobr1). Contributions from [David Schoonover](https://github.com/dsc).
+Original code by [Jono Brandel](https://github.com/jonobr1). Contributions from [David Schoonover](http://less.ly).
